@@ -1,10 +1,14 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +24,7 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false);
 
   async function enviar() {
+    Keyboard.dismiss();
     setError(null);
 
     if (!email.trim() || !password || (modoRegistro && !nombre.trim())) {
@@ -39,70 +44,85 @@ export default function Login() {
   }
 
   return (
-    <View style={styles.contenedor}>
-      <Text style={styles.titulo}>Pingpony</Text>
-      <Text style={styles.subtitulo}>
-        {modoRegistro ? "Creá tu cuenta" : "Ingresá para jugar"}
-      </Text>
-
-      {modoRegistro && (
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre"
-          placeholderTextColor="#8A7B68"
-          value={nombre}
-          onChangeText={setNombre}
-        />
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#8A7B68"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña (mínimo 6 caracteres)"
-        placeholderTextColor="#8A7B68"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <Pressable style={styles.boton} onPress={enviar} disabled={enviando}>
-        {enviando ? (
-          <ActivityIndicator color={colors.blanco} />
-        ) : (
-          <Text style={styles.textoBoton}>
-            {modoRegistro ? "Crear cuenta" : "Ingresar"}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.contenedor}>
+          <Text style={styles.titulo}>Pingpony</Text>
+          <Text style={styles.subtitulo}>
+            {modoRegistro ? "Creá tu cuenta" : "Ingresá para jugar"}
           </Text>
-        )}
-      </Pressable>
 
-      <Pressable
-        onPress={() => {
-          setModoRegistro(!modoRegistro);
-          setError(null);
-        }}
-      >
-        <Text style={styles.link}>
-          {modoRegistro
-            ? "¿Ya tenés cuenta? Ingresá"
-            : "¿No tenés cuenta? Registrate"}
-        </Text>
-      </Pressable>
-    </View>
+          {modoRegistro && (
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              placeholderTextColor="#8A7B68"
+              value={nombre}
+              onChangeText={setNombre}
+              returnKeyType="next"
+            />
+          )}
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#8A7B68"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            returnKeyType="next"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña (mínimo 6 caracteres)"
+            placeholderTextColor="#8A7B68"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            returnKeyType="done"
+            onSubmitEditing={enviar}
+          />
+
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <Pressable style={styles.boton} onPress={enviar} disabled={enviando}>
+            {enviando ? (
+              <ActivityIndicator color={colors.blanco} />
+            ) : (
+              <Text style={styles.textoBoton}>
+                {modoRegistro ? "Crear cuenta" : "Ingresar"}
+              </Text>
+            )}
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              setModoRegistro(!modoRegistro);
+              setError(null);
+            }}
+          >
+            <Text style={styles.link}>
+              {modoRegistro
+                ? "¿Ya tenés cuenta? Ingresá"
+                : "¿No tenés cuenta? Registrate"}
+            </Text>
+          </Pressable>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+    backgroundColor: colors.papel,
+  },
   contenedor: {
     flex: 1,
     backgroundColor: colors.papel,
@@ -125,8 +145,6 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.blanco,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.tinta,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: "Fredoka_400Regular",

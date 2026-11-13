@@ -1,10 +1,10 @@
 import { Session } from "@supabase/supabase-js";
 import {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -61,7 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function cerrarSesion() {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) {
+      console.log("Error al cerrar sesión:", error.message);
+    }
   }
 
   return (
