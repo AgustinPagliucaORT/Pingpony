@@ -9,6 +9,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { PartidoProvider } from "../context/PartidoContext";
+import { colors } from "../theme/colors";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,6 +40,19 @@ function Navegacion() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="nuevo-partido"
+            options={{
+              headerShown: true,
+              title: "Nuevo partido",
+              headerBackTitle: "Volver",
+              headerStyle: { backgroundColor: colors.papel },
+              headerTintColor: colors.tinta,
+              headerTitleStyle: { fontFamily: "Fredoka_600SemiBold" },
+              headerShadowVisible: false,
+            }}
+          />
+          <Stack.Screen name="partido" options={{ gestureEnabled: false }} />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" />
@@ -50,7 +65,9 @@ function Navegacion() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Navegacion />
+      <PartidoProvider>
+        <Navegacion />
+      </PartidoProvider>
     </AuthProvider>
   );
 }
