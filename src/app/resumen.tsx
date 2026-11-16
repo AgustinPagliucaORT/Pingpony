@@ -1,12 +1,25 @@
 import { Redirect, router } from "expo-router";
-import { Pressable, Share, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { usePartido } from "../context/PartidoContext";
+import { guardarPartido } from "../services/partidos";
 import { colors } from "../theme/colors";
 import { contarSets, obtenerGanador, tiempoJugado } from "../utils/partido";
 import { formatearDuracion } from "../utils/tiempo";
 
+type EstadoGuardado = "pendiente" | "guardando" | "guardado" | "error";
+
 export default function Resumen() {
   const { partidoActivo: partido, revancha, cerrarPartido } = usePartido();
+  const [estadoGuardado, setEstadoGuardado] =
+    useState<EstadoGuardado>("pendiente");
 
   if (!partido) {
     return <Redirect href="/" />;
@@ -22,6 +35,12 @@ export default function Resumen() {
   const detalleSets = partido.sets
     .map((set) => `${set.puntosA}-${set.puntosB}`)
     .join(", ");
+
+  const guardar = async () => {
+    setEstadoGuardado("guardando");
+    const error = await guardarPartido(partido);
+    setEstadoGuardado(error ? "error" : "guardado");
+  };
 
   const jugarRevancha = () => {
     revancha();
@@ -57,8 +76,38 @@ export default function Resumen() {
         <Text style={styles.detalle}>Duración: {duracion}</Text>
       </View>
 
-      <Pressable style={styles.boton} onPress={jugarRevancha}>
-        <Text style={styles.textoBoton}>Revancha</Text>
+      <Pressable
+        style={[
+          styles.boton,
+          estadoGuardado === "guardado" && styles.botonGuardado,
+        ]}
+        onPress={guardar}
+        disabled={
+          estadoGuardado === "guardando" || estadoGuardado === "guardado"
+        }
+      >
+        {estadoGuardado === "guardando" ? (
+          <ActivityIndicator color={colors.blanco} />
+        ) : (
+          <Text style={styles.textoBoton}>
+            {estadoGuardado === "guardado"
+              ? "✓ Partido guardado"
+              : "Guardar partido"}
+          </Text>
+        )}
+      </Pressable>
+
+      {estadoGuardado === "error" && (
+        <Text style={styles.error}>No se pudo guardar. Probá de nuevo.</Text>
+      )}
+
+      <Pressable
+        style={[styles.boton, styles.botonSecundario]}
+        onPress={jugarRevancha}
+      >
+        <Text style={[styles.textoBoton, styles.textoSecundario]}>
+          Revancha
+        </Text>
       </Pressable>
 
       <Pressable
@@ -128,6 +177,9 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 12,
   },
+  botonGuardado: {
+    backgroundColor: colors.mesa,
+  },
   botonSecundario: {
     backgroundColor: colors.blanco,
     borderWidth: 2,
@@ -140,6 +192,12 @@ const styles = StyleSheet.create({
   },
   textoSecundario: {
     color: colors.tinta,
+  },
+  error: {
+    fontFamily: "Fredoka_600SemiBold",
+    color: colors.rojo,
+    marginTop: -4,
+    marginBottom: 12,
   },
   volver: {
     fontFamily: "Fredoka_600SemiBold",
