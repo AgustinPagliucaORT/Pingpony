@@ -53,6 +53,8 @@ function Navegacion() {
             }}
           />
           <Stack.Screen name="partido" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="cargar-set" options={{ presentation: "modal" }} />
+          <Stack.Screen name="resumen" options={{ gestureEnabled: false }} />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" />
