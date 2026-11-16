@@ -25,7 +25,26 @@ export type Estadisticas = {
   jugados: number;
   ganados: number;
   porcentaje: number;
+  minutosJugados: number;
 };
+
+export function calcularEstadisticas(
+  partidos: Pick<PartidoGuardado, "ganador" | "duracion_segundos">[],
+): Estadisticas {
+  const jugados = partidos.length;
+  const ganados = partidos.filter((p) => p.ganador === "A").length;
+  const porcentaje = jugados > 0 ? Math.round((ganados / jugados) * 100) : 0;
+  const segundos = partidos.reduce(
+    (total, p) => total + p.duracion_segundos,
+    0,
+  );
+  return {
+    jugados,
+    ganados,
+    porcentaje,
+    minutosJugados: Math.round(segundos / 60),
+  };
+}
 
 export async function guardarPartido(partido: Partido): Promise<string | null> {
   const ganador = obtenerGanador(partido.sets, partido.reglas.setsParaGanar);
@@ -64,15 +83,26 @@ export async function obtenerHistorial(): Promise<{
       .select("*")
       .order("jugado_en", { ascending: false })
       .limit(5),
-    supabase.from("partidos").select("ganador"),
+    supabase.from("partidos").select("ganador, duracion_segundos"),
   ]);
 
   const ultimos = (respuestaUltimos.data ?? []) as PartidoGuardado[];
-  const todos = (respuestaTodos.data ?? []) as { ganador: Lado }[];
+  const todos = (respuestaTodos.data ?? []) as Pick<
+    PartidoGuardado,
+    "ganador" | "duracion_segundos"
+  >[];
 
-  const jugados = todos.length;
-  const ganados = todos.filter((p) => p.ganador === "A").length;
-  const porcentaje = jugados > 0 ? Math.round((ganados / jugados) * 100) : 0;
+  return { ultimos, estadisticas: calcularEstadisticas(todos) };
+}
 
-  return { ultimos, estadisticas: { jugados, ganados, porcentaje } };
+export async function obtenerTodosLosPartidos(): Promise<PartidoGuardado[]> {
+  const { data, error } = await supabase
+    .from("partidos")
+    .select("*")
+    .order("jugado_en", { ascending: false });
+
+  if (error) {
+    console.log("Error al obtener partidos:", error.message);
+  }
+  return (data ?? []) as PartidoGuardado[];
 }
